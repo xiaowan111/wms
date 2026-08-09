@@ -1,0 +1,172 @@
+﻿Linux 测试场景实操练习（WSL / Ubuntu）
+
+=================== 环境准备 ===================
+
+打开 Ubuntu 终端后，先建一个练习目录：
+mkdir -p ~/linux_demo && cd ~/linux_demo
+
+=================== 第1关：文件操作 ===================
+
+任务：创建一个测试目录结构，模拟测试环境
+
+# 1. 创建目录
+mkdir -p test/logs test/config test/report
+
+# 2. 查看目录（要能看到 test 文件夹）
+ls
+ls -la          # 看隐藏文件和详细信息
+
+# 3. 创建文件（模拟测试日志）
+touch test/logs/test_20260806.log
+
+# 4. 往文件里写内容
+echo "INFO: test start" > test/logs/test_20260806.log
+echo "ERROR: connection timeout" >> test/logs/test_20260806.log
+echo "INFO: test end" >> test/logs/test_20260806.log
+
+# 5. 查看文件内容
+cat test/logs/test_20260806.log
+
+# 6. 复制文件
+cp test/logs/test_20260806.log test/logs/backup.log
+
+# 7. 重命名
+mv test/logs/backup.log test/logs/backup_old.log
+
+# 8. 删除文件
+rm test/logs/backup_old.log
+
+练习目标：ls/cd/mkdir/touch/cat/cp/mv/rm 都能熟练敲出来
+
+
+=================== 第2关：查看日志 ===================
+
+场景：测试时实时看日志 + 过滤错误
+
+# 1. 先生成一个模拟日志文件（用循环）
+for i in $(seq 1 100); do
+  echo "line $i: INFO message" >> test/logs/big.log
+  if [ $((i % 10)) -eq 0 ]; then
+    echo "line $i: ERROR something failed" >> test/logs/big.log
+  fi
+done
+
+# 2. 分页查看大文件
+less test/logs/big.log
+# 按 q 退出，按空格翻页
+
+# 3. 只看最后10行（最常用）
+tail -10 test/logs/big.log
+
+# 4. 实时跟踪日志（按 Ctrl+C 停止）
+tail -f test/logs/big.log
+
+# 5. 只过滤 ERROR 行
+grep "ERROR" test/logs/big.log
+
+# 6. 统计 ERROR 有多少行
+grep "ERROR" test/logs/big.log | wc -l
+
+# 7. 组合：实时跟踪+只显示错误
+tail -f test/logs/big.log | grep "ERROR"
+
+练习目标：tail -f / grep / wc 这三个是测试排查最常用的
+
+
+=================== 第3关：权限操作 ===================
+
+场景：脚本需要执行权限
+
+# 1. 写一个简单脚本
+echo "#!/bin/bash" > test/run_test.sh
+echo "echo running test" >> test/run_test.sh
+
+# 2. 查看权限
+ls -l test/run_test.sh
+# 会看到 -rw-r--r-- 开头的，没有 x（执行权限）
+
+# 3. 尝试执行（会报 Permission denied）
+./test/run_test.sh
+
+# 4. 加执行权限
+chmod +x test/run_test.sh
+
+# 5. 再执行（成功）
+./test/run_test.sh
+
+练习目标：chmod +x 一定要会，部署环境天天用
+
+
+=================== 第4关：进程管理 ===================
+
+场景：测试时看资源占用、结束异常进程
+
+# 1. 查看所有进程
+ps aux
+
+# 2. 查找某个进程（比如 python）
+ps aux | grep python
+
+# 3. 实时看 CPU/内存占用
+top
+# 按 q 退出
+
+# 4. 结束一个进程
+# 先找到进程号
+ps aux | grep run_test.sh
+# 然后用 kill 加进程号结束，例如
+# kill 12345
+
+练习目标：ps / top / kill 会看会用
+
+
+=================== 第5关：网络检查 ===================
+
+场景：排查服务连不上
+
+# 1. 测试网络连通
+ping -c 4 baidu.com
+
+# 2. 看端口占用
+ss -tlnp
+
+# 3. 测试某个端口通不通
+# curl 网页
+curl -I https://www.baidu.com
+
+练习目标：ping / ss / curl 是网络排查三件套
+
+
+=================== 第6关：压缩与搜索 ===================
+
+场景：打包测试报告、搜索关键字
+
+# 1. 打包压缩
+tar -czvf test_report.tar.gz test/report
+
+# 2. 解压
+tar -xzvf test_report.tar.gz
+
+# 3. 在文件里搜索
+grep -r "ERROR" test/
+
+# 4. 查找文件
+find test/ -name "*.log"
+
+练习目标：tar 打包解压、grep -r 递归搜索
+
+
+=================== 验收清单 ===================
+
+练完打勾：
+[ ] ls / cd / pwd         文件与目录
+[ ] mkdir / touch          创建
+[ ] cat / less / tail      查看
+[ ] cp / mv / rm           复制移动删除
+[ ] grep / wc              过滤统计
+[ ] chmod +x               权限
+[ ] ps / top / kill        进程
+[ ] ping / ss / curl       网络
+[ ] tar / find             压缩查找
+
+全部能不看笔记敲出来 = Linux 测试基础过关

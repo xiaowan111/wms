@@ -1,0 +1,169 @@
+﻿ADB 测试场景实操练习（Windows）
+
+=================== 环境准备 ===================
+
+前提：
+1. 已安装 adb（platform-tools）
+2. 已连接安卓设备（真机开USB调试 或 模拟器）
+
+验证：
+adb version      # 看到版本号 = adb 装好
+adb devices      # 看到设备编号 = 设备连上
+
+=================== 第1关：连接与设备信息 ===================
+
+# 1. 查看连接的设备
+adb devices
+
+# 2. 查看设备型号
+adb shell getprop ro.product.model
+
+# 3. 查看安卓版本
+adb shell getprop ro.build.version.release
+
+# 4. 查看屏幕分辨率
+adb shell wm size
+
+练习目标：adb devices 一定要会，连不上先查这个
+
+
+=================== 第2关：安装与卸载应用 ===================
+
+场景：测试包反复安装卸载
+
+# 1. 安装应用（apk 路径换成你自己的）
+adb install C:\apk\test_app.apk
+
+# 2. 查看已安装的包名
+adb shell pm list packages
+
+# 3. 查找某个应用包名
+adb shell pm list packages | findstr 你要找的包名
+
+# 4. 卸载应用（包名要写全）
+adb uninstall 包名
+
+# 5. 覆盖安装（保留数据，测试常用）
+adb install -r C:\apk\test_app.apk
+
+练习目标：adb install / uninstall / pm list packages
+
+
+=================== 第3关：启动与停止应用 ===================
+
+场景：测试时拉起应用
+
+# 1. 启动应用（包名 + Activity名）
+adb shell am start -n 包名/.MainActivity
+
+# 2. 强制停止应用
+adb shell am force-stop 包名
+
+# 3. 清空应用数据（恢复初始状态）
+adb shell pm clear 包名
+
+练习目标：am start / force-stop / pm clear 是测试三件套
+
+
+=================== 第4关：抓日志（最核心） ===================
+
+场景：复现 bug 时抓崩溃日志
+
+# 1. 清空旧日志（每次复现前先清）
+adb logcat -c
+
+# 2. 复现你的 bug 操作
+
+# 3. 实时抓日志（Ctrl+C 停止）
+adb logcat
+
+# 4. 只抓错误日志
+adb logcat *:E
+
+# 5. 抓日志保存到文件
+adb logcat > C:\logs\bug1.log
+
+# 6. 只抓崩溃信息（FATAL）
+adb logcat -b crash
+
+练习目标：logcat -c 清日志 → logcat 抓日志 → 存文件，这个流程面试必讲
+
+
+=================== 第5关：截图与录屏 ===================
+
+场景：提交 bug 时附截图证据
+
+# 1. 截图并保存到电脑
+adb exec-out screencap -p > C:\logs\screen1.png
+
+# 2. 录屏（先执行，操作完按 Ctrl+C 停止）
+adb shell screenrecord /sdcard/video1.mp4
+# 停止后拉取到电脑
+adb pull /sdcard/video1.mp4 C:\logs\video1.mp4
+
+练习目标：screencap 截图、screenrecord 录屏
+
+
+=================== 第6关：文件传输 ===================
+
+场景：测试数据/安装包传到设备，测试日志拉回电脑
+
+# 1. 推文件到设备
+adb push C:\apk\test_app.apk /sdcard/
+
+# 2. 从设备拉文件
+adb pull /sdcard/test.log C:\logs\test.log
+
+练习目标：push 传进去、pull 拉回来
+
+
+=================== 第7关：模拟操作（进阶） ===================
+
+场景：自动化点击/滑动
+
+# 1. 模拟点击（x y 坐标）
+adb shell input tap 500 1000
+
+# 2. 模拟滑动（起点x 起点y 终点x 终点y 时长ms）
+adb shell input swipe 500 1500 500 300 500
+
+# 3. 模拟按键（返回键）
+adb shell input keyevent 4
+
+# 4. 输入文字
+adb shell input text "hello"
+
+练习目标：input tap / swipe / keyevent，了解即可
+
+
+=================== 第8关：查看应用信息（进阶） ===================
+
+场景：性能排查
+
+# 1. 查看应用内存占用
+adb shell dumpsys meminfo 包名
+
+# 2. 查看当前前台 Activity
+adb shell dumpsys activity top | findstr ACTIVITY
+
+# 3. 查看 CPU 使用
+adb shell top -n 1
+
+练习目标：dumpsys meminfo 会看内存就行
+
+
+=================== 验收清单 ===================
+
+练完打勾：
+[ ] adb devices                 连接
+[ ] adb install / uninstall     安装卸载
+[ ] adb shell pm list           包名
+[ ] adb logcat -c               清日志
+[ ] adb logcat                  抓日志
+[ ] adb logcat -b crash         抓崩溃
+[ ] adb exec-out screencap      截图
+[ ] adb shell input tap         点击
+[ ] adb shell input swipe       滑动
+[ ] adb shell dumpsys meminfo   内存
+
+能独立完成"安装应用→启动→复现操作→抓日志→截图"整个流程 = ADB 过关
